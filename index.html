@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>背影・心靈微光塔羅｜SEL 社會情緒學習抽牌</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Google Fonts: 思源宋體 (Noto Serif TC) 與 思源黑體 (Noto Sans TC) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700;900&display=swap" rel="stylesheet">
+    <!-- 引入 FontAwesome 圖示 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入 html2canvas 用於將抽到的卡片存成圖片 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Noto Serif TC"', 'serif'],
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                    },
+                    colors: {
+                        tarot: {
+                            dark: '#0f172a',
+                            navy: '#1e293b',
+                            gold: '#d4af37',
+                            goldLight: '#f3e5ab',
+                            orange: '#ea580c',
+                            amber: '#f59e0b',
+                            cream: '#fdfbf7'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* 自定義塔羅牌 3D 翻轉與背景質感 */
+        body {
+            background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 星空微光背景點綴 */
+        .stars-bg {
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, #f3e5ab, rgba(0,0,0,0)),
+                radial-gradient(1.5px 1.5px at 80px 120px, #d4af37, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 150px 60px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 250px 180px, #f59e0b, rgba(0,0,0,0));
+            background-size: 300px 300px;
+        }
+
+        /* 卡片容器與 3D 透視 */
+        .card-container {
+            perspective: 1000px;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .card-container:hover {
+            transform: translateY(-12px) scale(1.03);
+            z-index: 20;
+        }
+
+        /* 塔羅牌背面神秘花紋 */
+        .tarot-back {
+            background-color: #172033;
+            background-image: 
+                radial-gradient(circle at center, rgba(212, 175, 55, 0.15) 0%, transparent 70%),
+                repeating-linear-gradient(45deg, rgba(212, 175, 55, 0.05) 0px, rgba(212, 175, 55, 0.05) 2px, transparent 2px, transparent 8px),
+                repeating-linear-gradient(-45deg, rgba(212, 175, 55, 0.05) 0px, rgba(212, 175, 55, 0.05) 2px, transparent 2px, transparent 8px);
+            border: 2px solid #d4af37;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(212, 175, 55, 0.2);
+        }
+
+        /* 結果彈窗中的 3D 翻牌動畫 */
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+        }
+
+        .flip-card-inner.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1rem;
+        }
+
+        .flip-card-front {
+            transform: rotateY(180deg);
+        }
+
+        /* 羊皮紙質感正面 */
+        .parchment-card {
+            background: linear-gradient(135deg, #fdfbf7 0%, #f5efe6 100%);
+            border: 3px solid #d4af37;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(212, 175, 55, 0.25);
+        }
+
+        /* 洗牌動畫 */
+        @keyframes shufflePulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(0.95) rotate(-3deg); }
+            50% { transform: scale(1.02) rotate(3deg); }
+            75% { transform: scale(0.98) rotate(-1deg); }
+        }
+
+        .shuffling {
+            animation: shufflePulse 0.4s ease-in-out infinite;
+        }
+
+        /* 隱藏滾動條但保留功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="stars-bg text-slate-100 font-sans antialiased selection:bg-amber-500 selection:text-white flex flex-col justify-between">
+
+    <!-- 頂部導覽與標題區 -->
+    <header class="w-full max-w-6xl mx-auto px-4 pt-6 pb-4 text-center relative z-10">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/30 text-amber-300 text-xs sm:text-sm mb-3 tracking-wider">
+            <i class="fa-solid fa-sparkles"></i>
+            <span>國文《背影》× SEL 社會情緒學習</span>
+        </div>
+        <h1 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 tracking-wide drop-shadow-sm">
+            背影・心靈微光塔羅
+        </h1>
+        <p class="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto mt-3 leading-relaxed">
+            「我買幾個橘子去。你就在此地，不要走動。」<br class="hidden sm:inline">
+            靜下心來，想著最近讓你感動或困擾的一件事，從下方 <span class="text-amber-300 font-bold">25 張心靈牌卡</span> 中，憑直覺抽取一張專屬你的溫暖指引。
+        </p>
+
+        <!-- 功能按鈕列 -->
+        <div class="flex flex-wrap items-center justify-center gap-3 mt-5">
+            <button onclick="shuffleDeck()" class="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/80 hover:bg-slate-700 border border-amber-400/40 text-amber-200 text-sm transition shadow-lg active:scale-95">
+                <i class="fa-solid fa-shuffle"></i>
+                <span>重新洗牌</span>
+            </button>
+            <button onclick="drawRandomCard()" class="flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-medium text-sm transition shadow-lg shadow-orange-900/40 active:scale-95">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>直覺盲抽一張</span>
+            </button>
+            <button onclick="openGalleryModal()" class="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/80 hover:bg-slate-700 border border-slate-600 text-slate-300 text-sm transition shadow-lg active:scale-95">
+                <i class="fa-solid fa-book-open"></i>
+                <span>瀏覽全部 25 張牌義</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 主要牌陣展示區 (25張牌卡) -->
+    <main class="w-full max-w-6xl mx-auto px-4 py-6 flex-grow flex flex-col items-center justify-center">
+        <div id="deck-grid" class="grid grid-cols-5 sm:grid-cols-5 md:grid-cols-5 lg:grid-cols-5 gap-2.5 sm:gap-4 md:gap-5 w-full max-w-4xl">
+            <!-- JavaScript 動態生成 25 張牌背 -->
+        </div>
+        <p class="text-xs text-slate-400 mt-6 flex items-center gap-1.5">
+            <i class="fa-regular fa-hand-pointer text-amber-400"></i>
+            <span>點擊任一張牌卡，揭開屬於你的今日 SEL 心靈處方</span>
+        </p>
+    </main>
+
+    <!-- 頁尾 -->
+    <footer class="w-full py-4 text-center text-xs text-slate-500 border-t border-slate-800/60 mt-4">
+        <p>獻給每一位在愛與成長中學習的孩子｜《背影》SEL 教學互動教具</p>
+    </footer>
+
+    <!-- ========================================== -->
+    <!-- 抽牌結果彈出視窗 (Modal) -->
+    <!-- ========================================== -->
+    <div id="result-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-opacity duration-300">
+        <div class="relative w-full max-w-md flex flex-col items-center">
+            
+            <!-- 關閉按鈕 -->
+            <button onclick="closeResultModal()" class="self-end mb-2 w-9 h-9 rounded-full bg-slate-800/90 text-slate-300 hover:text-white hover:bg-slate-700 flex items-center justify-center border border-slate-600 transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <!-- 3D 翻轉卡片區 (也是截圖下載的目標區塊) -->
+            <div class="w-full aspect-[3/4.6] max-h-[72vh] relative">
+                <div id="flip-card-inner" class="flip-card-inner">
+                    
+                    <!-- 翻轉前：牌背 -->
+                    <div class="flip-card-back tarot-back flex flex-col items-center justify-center p-6">
+                        <div class="w-full h-full border border-amber-400/50 rounded-xl flex flex-col items-center justify-center relative">
+                            <i class="fa-solid fa-sun text-4xl text-amber-400/80 animate-spin" style="animation-duration: 12s;"></i>
+                            <span class="font-serif text-amber-200/80 tracking-widest text-sm mt-4">正在聆聽你的心聲...</span>
+                        </div>
+                    </div>
+
+                    <!-- 翻轉後：正面勵志小卡 (將被 html2canvas 擷取) -->
+                    <div id="capture-card-area" class="flip-card-front parchment-card text-slate-800 p-5 sm:p-6 flex flex-col justify-between overflow-y-auto no-scrollbar">
+                        
+                        <!-- 卡片頂部：羅馬數字與 SEL 標籤 -->
+                        <div>
+                            <div class="flex items-center justify-between border-b border-amber-700/20 pb-2.5">
+                                <span id="card-number" class="font-serif font-bold text-amber-800 text-sm tracking-widest">NO. 01</span>
+                                <span id="card-sel-tag" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                                    自我覺察
+                                </span>
+                            </div>
+
+                            <!-- 卡片主視覺插畫 Icon 與牌名 -->
+                            <div class="text-center my-4">
+                                <div id="card-icon-wrapper" class="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-gradient-to-br from-amber-100 to-orange-100 border-2 border-amber-400/60 flex items-center justify-center shadow-inner mb-3">
+                                    <i id="card-icon" class="fa-solid fa-lemon text-3xl sm:text-4xl text-orange-600"></i>
+                                </div>
+                                <h2 id="card-title" class="font-serif text-2xl sm:text-3xl font-black text-slate-900 tracking-wide">
+                                    橘子的溫度
+                                </h2>
+                                <p id="card-subtitle" class="text-xs sm:text-sm text-amber-800 font-medium mt-1">
+                                    「那時我真是太聰明了！」
+                                </p>
+                            </div>
+
+                            <!-- 勵志金句區 -->
+                            <div class="bg-white/80 rounded-xl p-3.5 sm:p-4 border border-amber-900/10 shadow-sm my-3">
+                                <p id="card-quote" class="font-serif text-base sm:text-lg font-bold text-slate-800 leading-relaxed text-center">
+                                    有些愛不善言辭，卻像口袋裡的橘子，把所有的甜都留給了你。
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- SEL 心靈小任務 / 教師引導 -->
+                        <div class="bg-amber-900/5 rounded-xl p-3.5 border-l-4 border-orange-500 mt-1">
+                            <div class="flex items-center gap-1.5 text-orange-800 font-bold text-xs mb-1">
+                                <i class="fa-solid fa-seedling"></i>
+                                <span>今日 SEL 心靈小行動</span>
+                            </div>
+                            <p id="card-action" class="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                                今天試著觀察身邊的人（家人、老師或同學），找出一個他們默默為你付出的微小舉動，並在心裡或口頭說聲謝謝。
+                            </p>
+                        </div>
+
+                        <!-- 卡片底部浮水印 -->
+                        <div class="text-center pt-3 mt-2 border-t border-amber-700/15 flex items-center justify-between text-[11px] text-amber-900/60 font-serif">
+                            <span>背影・心靈微光塔羅</span>
+                            <span id="card-date">2026</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 彈窗下方操作按鈕 -->
+            <div class="flex items-center justify-center gap-3 mt-4 w-full">
+                <button onclick="downloadCardImage()" id="download-btn" class="flex-1 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition active:scale-95">
+                    <i class="fa-solid fa-download"></i>
+                    <span>保存勵志小卡</span>
+                </button>
+                <button onclick="copyCardText()" class="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-200 border border-amber-400/30 font-medium text-sm flex items-center justify-center gap-2 shadow-lg transition active:scale-95">
+                    <i class="fa-regular fa-copy"></i>
+                    <span>複製文字</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 瀏覽全部 25 張牌義視窗 (教師備課/全覽模式) -->
+    <!-- ========================================== -->
+    <div id="gallery-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+        <div class="bg-slate-900 border border-amber-500/30 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl">
+            <!-- 標題列 -->
+            <div class="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                    <h3 class="font-serif text-xl font-bold text-amber-300">《背影》SEL 25張心靈牌卡圖鑑</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">點擊任一張卡片可檢視完整勵志語錄與行動任務</p>
+                </div>
+                <button onclick="closeGalleryModal()" class="w-9 h-9 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- 篩選標籤 -->
+            <div class="px-4 py-2.5 bg-slate-950/50 border-b border-slate-800 flex gap-2 overflow-x-auto no-scrollbar text-xs">
+                <button onclick="filterGallery('ALL')" class="filter-btn active px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-bold whitespace-nowrap">全部 (25)</button>
+                <button onclick="filterGallery('自我覺察')" class="filter-btn px-3 py-1 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap">自我覺察 (5)</button>
+                <button onclick="filterGallery('自我管理')" class="filter-btn px-3 py-1 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap">自我管理 (5)</button>
+                <button onclick="filterGallery('社會覺察')" class="filter-btn px-3 py-1 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap">社會覺察 (5)</button>
+                <button onclick="filterGallery('人際關係')" class="filter-btn px-3 py-1 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap">人際關係 (5)</button>
+                <button onclick="filterGallery('負責任的決定')" class="filter-btn px-3 py-1 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap">負責任的決定 (5)</button>
+            </div>
+
+            <!-- 卡片列表 -->
+            <div id="gallery-list" class="p-4 sm:p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+                <!-- JS 動態填充 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示訊息 Toast -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-full bg-amber-500 text-slate-950 font-bold text-sm shadow-xl opacity-0 pointer-events-none transition-opacity duration-300 flex items-center gap-2">
+        <i class="fa-solid fa-circle-check"></i>
+        <span id="toast-msg">訊息提示</span>
+    </div>
+
+    <!-- JavaScript 邏輯 -->
+    <script>
+        // 25 張結合《背影》與 SEL 五大核心素養的勵志牌卡資料庫
+        const tarotCards = [
+            // --- 一、自我覺察 (Self-Awareness) 5張 ---
+            {
+                id: 1,
+                num: "I",
+                sel: "自我覺察",
+                title: "遲來的淚光",
+                subtitle: "「我的淚很快地流下來了。」",
+                icon: "fa-droplet",
+                color: "text-blue-600",
+                quote: "流淚不是軟弱，而是你的心終於讀懂了愛與感動。允許自己真實地感受每一份情緒。",
+                action: "靜下心問問自己：今天我的心情是什麼顏色的？試著接納自己此刻所有的快樂或酸澀。"
+            },
+            {
+                id: 2,
+                num: "II",
+                sel: "自我覺察",
+                title: "當時的聰明",
+                subtitle: "「唉，我現在想想，那時真是太聰明了！」",
+                icon: "fa-lightbulb",
+                color: "text-amber-500",
+                quote: "承認過去的幼稚與不懂事，正是你開始長大、變得更加成熟的證明。",
+                action: "回想一件曾經讓你覺得自己「太自以為是」的小事，對過去的自己微笑，謝謝它教會你成長。"
+            },
+            {
+                id: 3,
+                num: "III",
+                sel: "自我覺察",
+                title: "心底的微光",
+                subtitle: "「在晶瑩的淚光中，又看見那肥胖的、青布棉袍黑布馬褂的背影。」",
+                icon: "fa-sun",
+                color: "text-orange-500",
+                quote: "即使在迷惘或離別的時刻，你內心深處依然擁有被愛照亮的力量。",
+                action: "閉上眼睛 10 秒鐘，在腦海中浮現一個曾經溫暖過你的人的畫面，感受那份力量。"
+            },
+            {
+                id: 4,
+                num: "IV",
+                sel: "自我覺察",
+                title: "酸楚與感恩",
+                subtitle: "「我心裡暗笑他的迂；他們只認得錢，託他們只是白託！」",
+                icon: "fa-heart-pulse",
+                color: "text-rose-600",
+                quote: "當我們把焦點從「抱怨不足」轉向「看見付出」，心靈就會瞬間變得富足。",
+                action: "寫下或默念三件你原本覺得「理所當然」，但其實得來不易的幸福。"
+            },
+            {
+                id: 5,
+                num: "V",
+                sel: "自我覺察",
+                title: "讀懂自己的心",
+                subtitle: "「近幾年來，父親和我都是東奔西走……」",
+                icon: "fa-compass",
+                color: "text-indigo-600",
+                quote: "在忙碌的課業與生活奔波中，別忘了停下來聽聽自己內心真實的聲音。",
+                action: "今天給自己 5 分鐘不看螢幕、不寫作業的「發呆時間」，好好陪伴自己。"
+            },
+
+            // --- 二、自我管理 (Self-Management) 5張 ---
+            {
+                id: 6,
+                num: "VI",
+                sel: "自我管理",
+                title: "跨越月台的勇氣",
+                subtitle: "「他用兩手攀著上面，兩腳再向上縮……」",
+                icon: "fa-mountain",
+                color: "text-emerald-600",
+                quote: "面對眼前的困難與高牆，一步一腳印地攀爬，你比自己想像得更有韌性。",
+                action: "把今天最讓你煩惱的一項任務拆解成「最小的第一步」，現在就去完成它！"
+            },
+            {
+                id: 7,
+                num: "VII",
+                sel: "自我管理",
+                title: "在此地，不要走動",
+                subtitle: "「你就在此地，不要走動。」",
+                icon: "fa-anchor",
+                color: "text-cyan-700",
+                quote: "在焦慮與慌亂的時候，穩住自己的腳步，耐心等待是最好的智慧。",
+                action: "當你覺得心浮氣躁時，做三次深呼吸：吸氣 4 秒、憋氣 2 秒、吐氣 6 秒。"
+            },
+            {
+                id: 8,
+                num: "VIII",
+                sel: "自我管理",
+                title: "拍拍身上的泥土",
+                subtitle: "「他抱著朱紅的橘子往回走了。過鐵道時，他先將橘子散放在地上……」",
+                icon: "fa-hands-holding",
+                color: "text-amber-700",
+                quote: "生活難免會沾染灰塵與挫折，拍拍泥土繼續前行，你依然懷抱著珍貴的果實。",
+                action: "面對最近的一次小失敗或挫折，對自己說：「沒關係，這只是過程，我還在進步中。」"
+            },
+            {
+                id: 9,
+                num: "IX",
+                sel: "自我管理",
+                title: "暗夜裡的盼望",
+                subtitle: "「大約大去之期不遠矣。」",
+                icon: "fa-star",
+                color: "text-yellow-500",
+                quote: "即使面對生命的無常與低谷，也要把思念與祝福化為好好生活的動力。",
+                action: "為自己設定一個本週的小目標，認真完成它，作為送給自己的一份禮物。"
+            },
+            {
+                id: 10,
+                num: "X",
+                sel: "自我管理",
+                title: "一路平安的祝福",
+                subtitle: "「我走了，到那邊來信！」",
+                icon: "fa-paper-plane",
+                color: "text-sky-600",
+                quote: "帶著別人的祝福出發，即使獨自面對未知的挑戰，你也不是孤單一人。",
+                action: "在心裡給即將面對挑戰（如考試、比賽）的自己加油打氣：「我可以的，我準備好了！」"
+            },
+
+            // --- 三、社會覺察 (Social Awareness) 5張 ---
+            {
+                id: 11,
+                num: "XI",
+                sel: "社會覺察",
+                title: "橘子的溫度",
+                subtitle: "「走到那邊月台，須穿過鐵道，須跳下去又爬上去。」",
+                icon: "fa-lemon",
+                color: "fa-solid text-orange-500",
+                quote: "有些愛不善言辭，卻像朱紅的橘子，把所有的甜與溫暖都留給了你。",
+                action: "觀察家人或師長的一個小動作，試著體會他們背後沒有說出口的關心。"
+            },
+            {
+                id: 12,
+                num: "XII",
+                sel: "社會覺察",
+                title: "青布棉袍的背影",
+                subtitle: "「他戴著黑布小帽，穿著黑布大馬褂，深青布棉袍……」",
+                icon: "fa-user-shield",
+                color: "text-slate-700",
+                quote: "每個人都有自己表達愛的方式，試著用對方的視角去理解那份笨拙的溫柔。",
+                action: "當別人給你的建議你不喜歡時，先別急著反駁，試著想想：「他是出於什麼樣的擔心？」"
+            },
+            {
+                id: 13,
+                num: "XIII",
+                sel: "社會覺察",
+                title: "紫毛大衣的守護",
+                subtitle: "「他囑我路上小心，夜裡要警醒些，不要受涼。」",
+                icon: "fa-shirt",
+                color: "text-purple-700",
+                quote: "那些看似瑣碎的叮嚀，其實是一針一線為你縫製的隱形盔甲。",
+                action: "下次聽到長輩或老師「碎碎念」時，在心裡把它翻譯成：「我很在乎你，希望你好好的。」"
+            },
+            {
+                id: 14,
+                num: "XIV",
+                sel: "社會覺察",
+                title: "蹒跚的步伐",
+                subtitle: "「他是一個胖子，走過去自然要費事些。」",
+                icon: "fa-shoe-prints",
+                color: "text-stone-600",
+                quote: "看見別人的不容易，你會學會用更溫柔、更有耐心的眼光看待這個世界。",
+                action: "今天在學校或路上，主動為需要幫助的人（或行動較慢的人）多留一點空間與耐心。"
+            },
+            {
+                id: 15,
+                num: "XV",
+                sel: "社會覺察",
+                title: "人群中的守望",
+                subtitle: "「等他的背影混入來來往往的人裡，再找不著了……」",
+                icon: "fa-users",
+                color: "text-teal-600",
+                quote: "人海茫茫，總有人在人群中默默注視著你，希望你走得穩健、走得快樂。",
+                action: "環顧一下教室裡的同學，對其中一位平日較少交談的同學微笑點頭，傳遞友善。"
+            },
+
+            // --- 四、人際關係 (Relationship Skills) 5張 ---
+            {
+                id: 16,
+                num: "XVI",
+                sel: "人際關係",
+                title: "不嫌迂的溫柔",
+                subtitle: "「父親總覺得不大妥帖，自己躊躇了一會……」",
+                icon: "fa-handshake-angle",
+                color: "text-amber-600",
+                quote: "真正的體貼，是不拆穿對方的笨拙，而是溫柔地接住對方的每一份心意。",
+                action: "當朋友或家人好心幫忙卻幫倒忙時，先感謝他的心意，再一起想辦法解決。"
+            },
+            {
+                id: 17,
+                num: "XVII",
+                sel: "人際關係",
+                title: "一封家書的距離",
+                subtitle: "「我北來後，他寫了一信給我……」",
+                icon: "fa-envelope-open-text",
+                color: "text-rose-500",
+                quote: "愛需要被表達，一句簡單的問候，就能跨越距離與誤解，重新連結彼此的心。",
+                action: "今天傳一則訊息、寫一張小紙條，或親口對一位重要的人說：「最近還好嗎？謝謝你！」"
+            },
+            {
+                id: 18,
+                num: "XVIII",
+                sel: "人際關係",
+                title: "茶房的善意",
+                subtitle: "「又囑託茶房好好照應我。」",
+                icon: "fa-mug-hot",
+                color: "text-amber-800",
+                quote: "人與人之間的善意是可以傳遞的，你的溫暖也能成為別人旅途中的依靠。",
+                action: "主動關心一位今天看起來有點疲憊或心情低落的同學，問問他需不需要幫忙。"
+            },
+            {
+                id: 19,
+                num: "XIX",
+                sel: "人際關係",
+                title: "破冰的微笑",
+                subtitle: "「我與父親不相見已二年餘了，我最不能忘記的是他的背影。」",
+                icon: "fa-face-smile-beam",
+                color: "text-yellow-600",
+                quote: "別讓沉默築起高牆，一個主動的微笑或道歉，能融化所有的尷尬與隔閡。",
+                action: "如果最近跟某人有點小誤會，今天試著主動釋出善意，先說一聲「早安」或「對不起」。"
+            },
+            {
+                id: 20,
+                num: "XX",
+                sel: "人際關係",
+                title: "傾聽的藝術",
+                subtitle: "「我說：『爸爸，你走吧。』他往車外看了看說：『我買幾個橘子去。』」",
+                icon: "fa-ear-listen",
+                color: "text-indigo-500",
+                quote: "好的溝通不僅是說出自己的想法，更是聽懂對方言語背後的愛與需求。",
+                action: "今天與人聊天時，放下手邊的事，專注看著對方的眼睛，認真聽完他說的每一句話。"
+            },
+
+            // --- 五、負責任的決定 (Responsible Decision-Making) 5張 ---
+            {
+                id: 21,
+                num: "XXI",
+                sel: "負責任的決定",
+                title: "不再後悔的選擇",
+                subtitle: "「我那時真是聰明過分，總覺他說話不大漂亮……」",
+                icon: "fa-scale-balanced",
+                color: "text-emerald-700",
+                quote: "在說出傷人的話之前多想三秒鐘，選擇善良，你就不會在未來留下遺憾。",
+                action: "今天在說話前做一個「三秒鐘過濾」：這句話是真的嗎？是善意的嗎？是有必要的嗎？"
+            },
+            {
+                id: 22,
+                num: "XXII",
+                sel: "負責任的決定",
+                title: "照看好自己的行囊",
+                subtitle: "「我將他給我做的紫毛大衣鋪好座位。」",
+                icon: "fa-suitcase-rolling",
+                color: "text-blue-700",
+                quote: "把別人對你的愛護化為自律，把自己照顧好，就是對愛你的人最好的回報。",
+                action: "整理好自己的書桌或書包，把每一件物品歸位，為自己的學習與生活負起責任。"
+            },
+            {
+                id: 23,
+                num: "XXIII",
+                sel: "負責任的決定",
+                title: "珍惜當下的每一刻",
+                subtitle: "「我買幾個橘子去。你就在此地，不要走動。」",
+                icon: "fa-hourglass-half",
+                color: "text-orange-600",
+                quote: "愛要及時，別等成了背影才學會珍惜。現在的每一個善意行動都無比珍貴。",
+                action: "把「改天再說」、「等一下再做」變成「現在就做」，立刻去完成一件對家人或朋友好的事。"
+            },
+            {
+                id: 24,
+                num: "XXIV",
+                sel: "負責任的決定",
+                title: "獨立前行的力量",
+                subtitle: "「我便進來坐下，我的眼淚又來了。」",
+                icon: "fa-train",
+                color: "text-slate-800",
+                quote: "列車終究會開動，帶著父母師長的期許，勇敢駛向屬於你的精彩人生吧！",
+                action: "思考一件你以前常依賴別人幫忙的事，今天決定靠自己的力量獨立完成它！"
+            },
+            {
+                id: 25,
+                num: "XXV",
+                sel: "負責任的決定",
+                title: "愛的傳承者",
+                subtitle: "「晶瑩的淚光中，又看見那……背影。」",
+                icon: "fa-hand-holding-heart",
+                color: "text-rose-600",
+                quote: "你所領受過的每一份溫暖，都將成為你未來照亮別人的光芒。",
+                action: "今天做一件「不求回報的小善事」（如順手撿起垃圾、幫同學開門），讓愛繼續流動。"
+            }
+        ];
+
+        let currentDeck = [...tarotCards];
+        let selectedCard = null;
+
+        // 初始化頁面
+        window.onload = function() {
+            // 設定卡片上的年份日期
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
+            document.getElementById('card-date').textContent = dateStr;
+
+            // 洗牌並渲染 25 張牌背
+            shuffleArray(currentDeck);
+            renderDeckGrid();
+            renderGalleryList('ALL');
+        };
+
+        // 洗牌演算法 (Fisher-Yates)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // 重新洗牌動畫與邏輯
+        function shuffleDeck() {
+            const grid = document.getElementById('deck-grid');
+            const cards = grid.querySelectorAll('.card-container');
+            
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('shuffling');
+                }, index * 15);
+            });
+
+            showToast("正在重新洗牌，凝聚心靈能量...");
+
+            setTimeout(() => {
+                shuffleArray(currentDeck);
+                renderDeckGrid();
+            }, 600);
+        }
+
+        // 渲染 25 張塔羅牌背陣列
+        function renderDeckGrid() {
+            const grid = document.getElementById('deck-grid');
+            grid.innerHTML = '';
+
+            currentDeck.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card-container aspect-[2/3] cursor-pointer select-none';
+                cardEl.onclick = () => openResultModal(card);
+
+                cardEl.innerHTML = `
+                    <div class="tarot-back w-full h-full rounded-lg sm:rounded-xl p-1.5 sm:p-2 flex flex-col items-center justify-center relative overflow-hidden group">
+                        <!-- 內框裝飾線 -->
+                        <div class="w-full h-full border border-amber-400/40 group-hover:border-amber-300 rounded-md sm:rounded-lg flex flex-col items-center justify-center transition-colors">
+                            <!-- 四角小星芒 -->
+                            <span class="absolute top-2.5 left-2.5 text-[8px] text-amber-400/50">✦</span>
+                            <span class="absolute top-2.5 right-2.5 text-[8px] text-amber-400/50">✦</span>
+                            <span class="absolute bottom-2.5 left-2.5 text-[8px] text-amber-400/50">✦</span>
+                            <span class="absolute bottom-2.5 right-2.5 text-[8px] text-amber-400/50">✦</span>
+
+                            <!-- 中央塔羅圖騰 -->
+                            <div class="w-7 h-7 sm:w-10 sm:h-10 rounded-full border border-amber-400/50 flex items-center justify-center bg-slate-900/60 group-hover:scale-110 group-hover:bg-amber-500/20 transition-all">
+                                <i class="fa-solid fa-sparkles text-amber-300/80 text-xs sm:text-sm"></i>
+                            </div>
+                            <span class="font-serif text-[10px] sm:text-xs text-amber-200/70 mt-1.5 tracking-widest group-hover:text-amber-200">
+                                ${index + 1}
+                            </span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(cardEl);
+            });
+        }
+
+        // 直覺盲抽一張
+        function drawRandomCard() {
+            const randomIndex = Math.floor(Math.random() * currentDeck.length);
+            openResultModal(currentDeck[randomIndex]);
+        }
+
+        // 開啟抽牌結果視窗並執行翻牌動畫
+        function openResultModal(card) {
+            selectedCard = card;
+            const modal = document.getElementById('result-modal');
+            const flipInner = document.getElementById('flip-card-inner');
+
+            // 重置翻牌狀態為背面
+            flipInner.classList.remove('is-flipped');
+
+            // 填入卡片資料
+            document.getElementById('card-number').textContent = `ARCANA ${card.num} · #${String(card.id).padStart(2, '0')}`;
+            document.getElementById('card-sel-tag').textContent = card.sel;
+            document.getElementById('card-title').textContent = card.title;
+            document.getElementById('card-subtitle').textContent = card.subtitle;
+            document.getElementById('card-quote').textContent = card.quote;
+            document.getElementById('card-action').textContent = card.action;
+
+            // 設定圖示與顏色
+            const iconEl = document.getElementById('card-icon');
+            iconEl.className = `fa-solid ${card.icon} text-3xl sm:text-4xl ${card.color}`;
+
+            // 顯示彈窗
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // 延遲 350ms 觸發翻牌動畫，增加儀式感
+            setTimeout(() => {
+                flipInner.classList.add('is-flipped');
+            }, 350);
+        }
+
+        // 關閉結果視窗
+        function closeResultModal() {
+            const modal = document.getElementById('result-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // 將抽到的卡片存成圖片下載
+        function downloadCardImage() {
+            if (!selectedCard) return;
+            const btn = document.getElementById('download-btn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>正在製卡...</span>`;
+            btn.disabled = true;
+
+            const captureArea = document.getElementById('capture-card-area');
+
+            html2canvas(captureArea, {
+                scale: 2,
+                backgroundColor: '#fdfbf7',
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `背影SEL小卡_${selectedCard.title}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                showToast("小卡圖片已成功保存！");
+            }).catch(err => {
+                console.error(err);
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                showToast("圖片生成失敗，請試著使用螢幕截圖保存喔！");
+            });
+        }
+
+        // 複製卡片文字內容
+        function copyCardText() {
+            if (!selectedCard) return;
+            const textToCopy = `【背影・心靈微光塔羅】\n牌卡：${selectedCard.title}（${selectedCard.sel}）\n課文呼應：${selectedCard.subtitle}\n勵志金句：${selectedCard.quote}\n今日 SEL 小行動：${selectedCard.action}`;
+            
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            showToast("已複製小卡文字，可貼上分享給同學或老師！");
+        }
+
+        // ==========================================
+        // 全覽圖鑑視窗邏輯
+        // ==========================================
+        function openGalleryModal() {
+            const modal = document.getElementById('gallery-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGalleryModal() {
+            const modal = document.getElementById('gallery-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function filterGallery(category) {
+            // 更新按鈕樣式
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.textContent.includes(category) || (category === 'ALL' && btn.textContent.includes('全部'))) {
+                    btn.className = 'filter-btn active px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-bold whitespace-nowrap';
+                } else {
+                    btn.className = 'filter-btn px-3 py-1 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 whitespace-nowrap';
+                }
+            });
+            renderGalleryList(category);
+        }
+
+        function renderGalleryList(category) {
+            const list = document.getElementById('gallery-list');
+            list.innerHTML = '';
+
+            const filtered = category === 'ALL' 
+                ? tarotCards 
+                : tarotCards.filter(c => c.sel === category);
+
+            filtered.forEach(card => {
+                const item = document.createElement('div');
+                item.className = 'bg-slate-800/80 hover:bg-slate-800 border border-slate-700 hover:border-amber-400/50 rounded-xl p-4 cursor-pointer transition flex flex-col justify-between';
+                item.onclick = () => {
+                    closeGalleryModal();
+                    openResultModal(card);
+                };
+
+                item.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between text-xs mb-2">
+                            <span class="font-serif text-amber-400 font-bold">#${String(card.id).padStart(2, '0')} ${card.num}</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-900 text-amber-200 border border-amber-500/20">${card.sel}</span>
+                        </div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                                <i class="fa-solid ${card.icon} ${card.color} text-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-serif font-bold text-slate-100 text-base">${card.title}</h4>
+                                <p class="text-[11px] text-slate-400 line-clamp-1">${card.subtitle}</p>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-300 leading-relaxed line-clamp-2 mt-2">
+                            ${card.quote}
+                        </p>
+                    </div>
+                    <div class="mt-3 pt-2 border-t border-slate-700/60 text-[11px] text-amber-400 flex items-center justify-end gap-1">
+                        <span>點擊抽看此卡</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // 顯示底部輕提示
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
